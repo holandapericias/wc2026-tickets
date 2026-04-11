@@ -2,15 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-const links = [
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/market", label: "Market" },
-  { href: "/scraper", label: "Scraper" },
-];
+import { useLanguage } from "./LanguageProvider";
+import LanguageToggle from "./LanguageToggle";
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { t } = useLanguage();
+
+  const links = [
+    { href: "/dashboard", label: t("dashboard") },
+    { href: "/market", label: t("market") },
+    { href: "/scraper", label: t("scraper") },
+  ];
 
   return (
     <nav className="border-b border-dark-border bg-dark-card sticky top-0 z-50">
@@ -20,7 +23,7 @@ export default function Navbar() {
             WC
           </div>
           <span className="font-semibold text-dark-text hidden sm:inline">
-            WC2026 Ticket Intelligence
+            {t("appName")}
           </span>
         </Link>
 
@@ -38,6 +41,9 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
+          <div className="ml-2 border-l border-dark-border pl-2">
+            <LanguageToggle />
+          </div>
         </div>
       </div>
     </nav>

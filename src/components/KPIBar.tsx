@@ -1,4 +1,7 @@
+"use client";
+
 import { PortfolioSummary } from "@/lib/types";
+import { useLanguage } from "./LanguageProvider";
 
 function fmt(n: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
@@ -15,6 +18,7 @@ function KPICard({ label, value, sub, color }: { label: string; value: string; s
 }
 
 export default function KPIBar({ summary }: { summary: PortfolioSummary }) {
+  const { t } = useLanguage();
   const profitColor = summary.total_net_profit >= 0 ? "text-green-400" : "text-red-400";
   const vsTargetPct = ((summary.total_net_profit / summary.target) * 100).toFixed(0);
   const vsTargetColor = summary.total_net_profit >= summary.target ? "text-green-400" : "text-yellow-400";
@@ -22,35 +26,35 @@ export default function KPIBar({ summary }: { summary: PortfolioSummary }) {
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
       <KPICard
-        label="Portfolio Value"
+        label={t("portfolioValue")}
         value={fmt(summary.total_market_value)}
-        sub={`Cost: ${fmt(summary.total_cost)}`}
+        sub={`${t("cost")}: ${fmt(summary.total_cost)}`}
       />
       <KPICard
-        label="You Receive"
+        label={t("youReceive")}
         value={fmt(summary.total_you_receive)}
-        sub="After 15% fee"
+        sub={t("afterFee")}
       />
       <KPICard
-        label="Net Profit"
+        label={t("netProfit")}
         value={fmt(summary.total_net_profit)}
         color={profitColor}
       />
       <KPICard
-        label="vs $25K Target"
+        label={t("vsTarget")}
         value={`${vsTargetPct}%`}
-        sub={fmt(summary.vs_target) + " remaining"}
+        sub={fmt(summary.vs_target) + " " + t("remaining")}
         color={vsTargetColor}
       />
       <KPICard
-        label="Avg Multiple"
+        label={t("avgMultiple")}
         value={`${summary.avg_multiple.toFixed(1)}x`}
-        sub="Across portfolio"
+        sub={t("acrossPortfolio")}
       />
       <KPICard
-        label="Urgent Alerts"
+        label={t("urgentAlerts")}
         value={String(summary.fire_count + summary.urgent_count)}
-        sub={`${summary.fire_count} FIRE, ${summary.urgent_count} urgent`}
+        sub={`${summary.fire_count} ${t("fire")}, ${summary.urgent_count} ${t("urgent")}`}
         color={summary.fire_count > 0 ? "text-red-400" : "text-dark-text"}
       />
     </div>

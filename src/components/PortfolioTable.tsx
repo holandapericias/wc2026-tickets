@@ -4,6 +4,7 @@ import Link from "next/link";
 import { TicketWithSignal } from "@/lib/types";
 import SignalBadge from "./SignalBadge";
 import SparkLine from "./SparkLine";
+import { useLanguage } from "./LanguageProvider";
 
 function fmt(n: number | null) {
   if (n == null) return "—";
@@ -11,99 +12,101 @@ function fmt(n: number | null) {
 }
 
 export default function PortfolioTable({ tickets }: { tickets: TicketWithSignal[] }) {
+  const { t } = useLanguage();
+
   return (
     <div className="overflow-x-auto rounded-lg border border-dark-border">
       <table className="w-full portfolio-table">
         <thead>
           <tr className="bg-dark-surface">
-            <th className="text-left px-3 py-2">Game</th>
-            <th className="text-left px-3 py-2">Match</th>
-            <th className="text-left px-3 py-2 hidden lg:table-cell">Venue</th>
-            <th className="text-center px-3 py-2">Cat</th>
-            <th className="text-left px-3 py-2 hidden md:table-cell">Sec/Row</th>
-            <th className="text-right px-3 py-2">Cost</th>
-            <th className="text-right px-3 py-2">Ask</th>
-            <th className="text-right px-3 py-2 hidden lg:table-cell">Last Sale</th>
-            <th className="text-right px-3 py-2">Multiple</th>
-            <th className="text-right px-3 py-2 hidden md:table-cell">You Receive</th>
-            <th className="text-right px-3 py-2 hidden lg:table-cell">Net P/L</th>
-            <th className="text-center px-3 py-2">Days</th>
-            <th className="text-center px-3 py-2">Signal</th>
-            <th className="text-center px-3 py-2 hidden md:table-cell">Trend</th>
+            <th className="text-left px-3 py-2">{t("game")}</th>
+            <th className="text-left px-3 py-2">{t("match")}</th>
+            <th className="text-left px-3 py-2 hidden lg:table-cell">{t("venue")}</th>
+            <th className="text-center px-3 py-2">{t("cat")}</th>
+            <th className="text-left px-3 py-2 hidden md:table-cell">{t("secRow")}</th>
+            <th className="text-right px-3 py-2">{t("cost")}</th>
+            <th className="text-right px-3 py-2">{t("askPrice")}</th>
+            <th className="text-right px-3 py-2 hidden lg:table-cell">{t("lastSale")}</th>
+            <th className="text-right px-3 py-2">{t("multiple")}</th>
+            <th className="text-right px-3 py-2 hidden md:table-cell">{t("youReceive")}</th>
+            <th className="text-right px-3 py-2 hidden lg:table-cell">{t("netPL")}</th>
+            <th className="text-center px-3 py-2">{t("days")}</th>
+            <th className="text-center px-3 py-2">{t("signal")}</th>
+            <th className="text-center px-3 py-2 hidden md:table-cell">{t("trend")}</th>
           </tr>
         </thead>
         <tbody>
-          {tickets.map((t) => {
-            const profitColor = (t.net_profit ?? 0) >= 0 ? "text-green-400" : "text-red-400";
+          {tickets.map((tk) => {
+            const profitColor = (tk.net_profit ?? 0) >= 0 ? "text-green-400" : "text-red-400";
             const daysColor =
-              t.days_left <= 7 ? "text-red-400" :
-              t.days_left <= 14 ? "text-orange-400" :
-              t.days_left <= 21 ? "text-yellow-400" :
+              tk.days_left <= 7 ? "text-red-400" :
+              tk.days_left <= 14 ? "text-orange-400" :
+              tk.days_left <= 21 ? "text-yellow-400" :
               "text-dark-muted";
 
             return (
               <tr
-                key={t.id}
+                key={tk.id}
                 className="border-t border-dark-border hover:bg-dark-surface/50 transition-colors"
               >
                 <td className="px-3 py-2 text-dark-muted">
-                  <Link href={`/ticket/${t.id}`} className="hover:text-fifa-red">
-                    G{t.game_num}
+                  <Link href={`/ticket/${tk.id}`} className="hover:text-fifa-red">
+                    G{tk.game_num}
                   </Link>
                 </td>
                 <td className="px-3 py-2">
-                  <Link href={`/ticket/${t.id}`} className="hover:text-fifa-red text-dark-text">
-                    <div className="max-w-[200px] truncate">{t.match_name}</div>
-                    <div className="text-xs text-dark-muted">{t.city}</div>
+                  <Link href={`/ticket/${tk.id}`} className="hover:text-fifa-red text-dark-text">
+                    <div className="max-w-[200px] truncate">{tk.match_name}</div>
+                    <div className="text-xs text-dark-muted">{tk.city}</div>
                   </Link>
                 </td>
                 <td className="px-3 py-2 text-dark-muted text-xs hidden lg:table-cell max-w-[150px] truncate">
-                  {t.venue}
+                  {tk.venue}
                 </td>
                 <td className="px-3 py-2 text-center">
                   <span className="px-1.5 py-0.5 rounded text-xs bg-dark-surface">
-                    Cat {t.category}
+                    Cat {tk.category}
                   </span>
                 </td>
                 <td className="px-3 py-2 text-dark-muted text-xs hidden md:table-cell">
-                  {t.section}/{t.row_num}
+                  {tk.section}/{tk.row_num}
                 </td>
                 <td className="px-3 py-2 text-right text-dark-muted">
-                  {fmt(t.cost_per_ticket)}
+                  {fmt(tk.cost_per_ticket)}
                 </td>
                 <td className="px-3 py-2 text-right text-dark-text font-semibold">
-                  {fmt(t.latest_ask)}
-                  {t.comparable_section && t.comparable_section !== t.section && (
-                    <div className="text-xs text-dark-muted">Sec {t.comparable_section}</div>
+                  {fmt(tk.latest_ask)}
+                  {tk.comparable_section && tk.comparable_section !== tk.section && (
+                    <div className="text-xs text-dark-muted">Sec {tk.comparable_section}</div>
                   )}
                 </td>
                 <td className="px-3 py-2 text-right text-dark-muted hidden lg:table-cell">
-                  {fmt(t.latest_sale)}
+                  {fmt(tk.latest_sale)}
                 </td>
                 <td className="px-3 py-2 text-right">
                   <span className={
-                    (t.multiple ?? 0) >= 3 ? "text-red-400 font-bold" :
-                    (t.multiple ?? 0) >= 2 ? "text-fifa-gold font-semibold" :
-                    (t.multiple ?? 0) >= 1 ? "text-green-400" :
+                    (tk.multiple ?? 0) >= 3 ? "text-red-400 font-bold" :
+                    (tk.multiple ?? 0) >= 2 ? "text-fifa-gold font-semibold" :
+                    (tk.multiple ?? 0) >= 1 ? "text-green-400" :
                     "text-red-400"
                   }>
-                    {t.multiple != null ? `${t.multiple.toFixed(1)}x` : "—"}
+                    {tk.multiple != null ? `${tk.multiple.toFixed(1)}x` : "—"}
                   </span>
                 </td>
                 <td className="px-3 py-2 text-right hidden md:table-cell">
-                  {fmt(t.you_receive)}
+                  {fmt(tk.you_receive)}
                 </td>
                 <td className={`px-3 py-2 text-right hidden lg:table-cell ${profitColor}`}>
-                  {fmt(t.net_profit)}
+                  {fmt(tk.net_profit)}
                 </td>
                 <td className={`px-3 py-2 text-center font-mono ${daysColor}`}>
-                  {t.days_left}d
+                  {tk.days_left}d
                 </td>
                 <td className="px-3 py-2 text-center">
-                  <SignalBadge signal={t.signal} score={t.score} />
+                  <SignalBadge signal={tk.signal} score={tk.score} />
                 </td>
                 <td className="px-3 py-2 text-center hidden md:table-cell">
-                  <SparkLine data={t.price_history} />
+                  <SparkLine data={tk.price_history} />
                 </td>
               </tr>
             );
