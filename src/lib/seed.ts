@@ -19,6 +19,6 @@ export const TICKET_SEED_DATA = [
   { game_num: 100, match_name: "QF: Winner G95 vs Winner G96", match_date: "2026-07-11", venue: "GEHA Field at Arrowhead Stadium", city: "Kansas City", category: 2, section: "343", row_num: "24", seats: "17,18", qty: 2, cost_per_ticket: 825, total_cost: 1650 },
 ];
 
-export const TOTAL_COST_BASIS = 25590;
+export const TOTAL_COST_BASIS = 22480;
 export const TARGET_NET_PROFIT = 25000;
 export const SELLER_FEE = 0.15;
