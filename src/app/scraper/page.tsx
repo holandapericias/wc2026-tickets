@@ -19,6 +19,7 @@ export default function ScraperPage() {
   const [lastScrape, setLastScrape] = useState<string | null>(null);
   const [ticketScans, setTicketScans] = useState<ScanInfo[]>([]);
   const [sources, setSources] = useState<SourceInfo[]>([]);
+  const [totalScans, setTotalScans] = useState(0);
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -31,13 +32,15 @@ export default function ScraperPage() {
     try {
       const [ticketsRes, scansRes] = await Promise.all([
         fetch("/api/tickets"),
-        fetch("/api/prices?limit=500"),
+        fetch("/api/prices?limit=2000"),
       ]);
       const tickets = await ticketsRes.json();
       const scans = await scansRes.json();
 
       if (Array.isArray(scans) && scans.length > 0) {
+        // scans are sorted DESC by scanned_at, so [0] is newest
         setLastScrape(scans[0].scanned_at);
+        setTotalScans(scans.length);
 
         // Source breakdown
         const sourceMap = new Map<string, number>();
@@ -63,6 +66,9 @@ export default function ScraperPage() {
           });
           setTicketScans(Array.from(ticketMap.values()).sort((a, b) => a.game_num - b.game_num));
         }
+      } else {
+        setLastScrape(null);
+        setTotalScans(0);
       }
     } catch (e) {
       console.error("Failed to load scraper status:", e);
@@ -77,8 +83,15 @@ export default function ScraperPage() {
     try {
       const res = await fetch("/api/scrape/trigger", { method: "POST" });
       const data = await res.json();
-      setResult(`Scrape complete: ${data.scanned} tickets scanned. ${data.errors?.length || 0} errors.`);
-      loadStatus();
+      if (data.success) {
+        setResult(`Scrape complete: ${data.scanned} tickets scanned. ${data.errors?.length || 0} errors.`);
+        // Update last scrape immediately to now
+        setLastScrape(new Date().toISOString());
+        // Then reload full status
+        await loadStatus();
+      } else {
+        setResult(`Scrape failed: ${data.errors?.join(", ") || "Unknown error"}`);
+      }
     } catch (e) {
       setResult("Scrape failed: " + String(e));
     } finally {
@@ -105,7 +118,7 @@ export default function ScraperPage() {
       </div>
 
       {result && (
-        <div className="bg-dark-card border border-dark-border rounded-lg p-3 text-sm">
+        <div className={`border rounded-lg p-3 text-sm ${result.includes("failed") ? "bg-red-900/20 border-red-700 text-red-300" : "bg-green-900/20 border-green-700 text-green-300"}`}>
           {result}
         </div>
       )}
@@ -121,13 +134,13 @@ export default function ScraperPage() {
         <div className="kpi-card">
           <div className="text-xs text-dark-muted uppercase mb-1">Next Scrape (Cron)</div>
           <div className="text-lg font-mono text-dark-text">
-            {nextScrape.toLocaleString()} EST
+            {nextScrape.toLocaleString()}
           </div>
         </div>
         <div className="kpi-card">
-          <div className="text-xs text-dark-muted uppercase mb-1">Tickets Tracked</div>
+          <div className="text-xs text-dark-muted uppercase mb-1">Total Price Scans</div>
           <div className="text-lg font-mono text-dark-text">
-            {ticketScans.length} / 18
+            {totalScans}
           </div>
         </div>
       </div>
