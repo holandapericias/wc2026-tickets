@@ -9,7 +9,12 @@ export function getSupabase(): SupabaseClient {
     if (!url || !key) {
       throw new Error("Supabase credentials missing. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_KEY.");
     }
-    _supabase = createClient(url, key);
+    _supabase = createClient(url, key, {
+      global: {
+        fetch: (input, init) =>
+          fetch(input, { ...init, cache: "no-store" }),
+      },
+    });
   }
   return _supabase;
 }
