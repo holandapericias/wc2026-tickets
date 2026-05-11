@@ -53,6 +53,10 @@ export const translations = {
     days: "Days",
     signal: "Signal",
     trend: "Trend",
+    qty: "Qty",
+    totalCostShort: "Total",
+    totals: "Totals",
+    selected: "selected",
 
     // Ticket Detail
     ticketInfo: "Ticket Info",
@@ -173,6 +177,10 @@ export const translations = {
     days: "Dias",
     signal: "Sinal",
     trend: "Tendência",
+    qty: "Qtd",
+    totalCostShort: "Total",
+    totals: "Totais",
+    selected: "selecionados",
 
     // Ticket Detail
     ticketInfo: "Info do Ingresso",
