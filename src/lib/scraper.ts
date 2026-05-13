@@ -25,10 +25,13 @@ export async function scrapeAllTickets(): Promise<{
   const lastPriceMap = new Map<string, { ask: number; sale: number }>();
   if (prevScans) {
     for (const scan of prevScans) {
-      if (!lastPriceMap.has(scan.ticket_id) && scan.ask_price) {
+      // Coerce defensively: Supabase returns NUMERIC as string, so the bare
+      // truthy check would let "0" through and propagate zero prices forever.
+      const ask = Number(scan.ask_price);
+      if (!lastPriceMap.has(scan.ticket_id) && ask > 0) {
         lastPriceMap.set(scan.ticket_id, {
-          ask: Number(scan.ask_price),
-          sale: Number(scan.last_sale_price || scan.ask_price * 0.9),
+          ask,
+          sale: Number(scan.last_sale_price) || ask * 0.9,
         });
       }
     }
