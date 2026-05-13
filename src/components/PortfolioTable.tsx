@@ -53,6 +53,8 @@ export default function PortfolioTable({
     };
   }, [tickets, selected]);
 
+  const showCategory = tickets.some((tk) => tk.category > 0);
+
   return (
     <div className="overflow-x-auto rounded-lg border border-dark-border">
       <table className="w-full portfolio-table">
@@ -69,7 +71,7 @@ export default function PortfolioTable({
             <th className="text-left px-3 py-2">{t("game")}</th>
             <th className="text-left px-3 py-2">{t("match")}</th>
             <th className="text-left px-3 py-2 hidden lg:table-cell">{t("venue")}</th>
-            <th className="text-center px-3 py-2">{t("cat")}</th>
+            {showCategory && <th className="text-center px-3 py-2">{t("cat")}</th>}
             <th className="text-left px-3 py-2 hidden md:table-cell">{t("secRow")}</th>
             <th className="text-center px-2 py-2">{t("qty")}</th>
             <th className="text-right px-3 py-2">{t("cost")}</th>
@@ -123,11 +125,13 @@ export default function PortfolioTable({
                 <td className="px-3 py-2 text-dark-muted text-xs hidden lg:table-cell max-w-[150px] truncate">
                   {tk.venue}
                 </td>
-                <td className="px-3 py-2 text-center">
-                  <span className="px-1.5 py-0.5 rounded text-xs bg-dark-surface">
-                    Cat {tk.category}
-                  </span>
-                </td>
+                {showCategory && (
+                  <td className="px-3 py-2 text-center">
+                    <span className="px-1.5 py-0.5 rounded text-xs bg-dark-surface">
+                      Cat {tk.category}
+                    </span>
+                  </td>
+                )}
                 <td className="px-3 py-2 text-dark-muted text-xs hidden md:table-cell">
                   {tk.section}/{tk.row_num}
                 </td>
@@ -189,7 +193,7 @@ export default function PortfolioTable({
               </span>
             </td>
             <td className="hidden lg:table-cell" />
-            <td />
+            {showCategory && <td />}
             <td className="hidden md:table-cell" />
             <td className="px-2 py-3 text-center text-fifa-gold">
               {totals.qty}
