@@ -1,14 +1,13 @@
 import { getSupabase } from "./supabase";
-import { Ticket, PriceScan, TicketWithSignal, PortfolioSummary } from "./types";
+import { Owner, Ticket, PriceScan, TicketWithSignal, PortfolioSummary } from "./types";
 import { calculateSignal, calculateTrend, getDaysUntil } from "./signals";
 import { SELLER_FEE, TOTAL_COST_BASIS, TARGET_NET_PROFIT } from "./seed";
 
-export async function getTicketsWithSignals(): Promise<TicketWithSignal[]> {
+export async function getTicketsWithSignals(owner?: Owner): Promise<TicketWithSignal[]> {
   const supabase = getSupabase();
-  const { data: tickets } = await supabase
-    .from("tickets")
-    .select("*")
-    .order("game_num");
+  let query = supabase.from("tickets").select("*").order("game_num").order("match_date");
+  if (owner) query = query.eq("owner", owner);
+  const { data: tickets } = await query;
 
   if (!tickets || tickets.length === 0) return [];
 
@@ -29,9 +28,10 @@ export async function getTicketsWithSignals(): Promise<TicketWithSignal[]> {
     const latest = scans[0];
     const latestAsk = latest?.ask_price ?? null;
     const latestSale = latest?.last_sale_price ?? null;
-    const multiple = latestAsk ? latestAsk / ticket.cost_per_ticket : null;
+    const hasCostBasis = ticket.cost_per_ticket > 0;
+    const multiple = latestAsk && hasCostBasis ? latestAsk / ticket.cost_per_ticket : null;
     const youReceive = latestAsk ? latestAsk * (1 - SELLER_FEE) * ticket.qty : null;
-    const netProfit = youReceive != null ? youReceive - ticket.total_cost : null;
+    const netProfit = youReceive != null && hasCostBasis ? youReceive - ticket.total_cost : null;
     const daysLeft = getDaysUntil(ticket.match_date);
     const trend = calculateTrend(scans);
     const { signal, score } = calculateSignal(ticket, multiple, daysLeft, trend);
@@ -63,7 +63,10 @@ export async function getTicketsWithSignals(): Promise<TicketWithSignal[]> {
   });
 }
 
-export function getPortfolioSummary(tickets: TicketWithSignal[]): PortfolioSummary {
+export function getPortfolioSummary(
+  tickets: TicketWithSignal[],
+  options?: { costBasis?: number; targetProfit?: number },
+): PortfolioSummary {
   let totalMarketValue = 0;
   let totalYouReceive = 0;
   let multiplesSum = 0;
@@ -86,17 +89,23 @@ export function getPortfolioSummary(tickets: TicketWithSignal[]): PortfolioSumma
     if (t.days_left <= 21 && t.signal !== "FIRE") urgentCount++;
   });
 
-  const totalNetProfit = totalYouReceive - TOTAL_COST_BASIS;
+  const costBasis = options?.costBasis ?? TOTAL_COST_BASIS;
+  const target = options?.targetProfit ?? TARGET_NET_PROFIT;
+  const totalNetProfit = totalYouReceive - costBasis;
 
   return {
-    total_cost: TOTAL_COST_BASIS,
+    total_cost: costBasis,
     total_market_value: totalMarketValue,
     total_you_receive: totalYouReceive,
     total_net_profit: totalNetProfit,
-    vs_target: TARGET_NET_PROFIT - totalNetProfit,
+    vs_target: target - totalNetProfit,
     avg_multiple: multiplesCount > 0 ? multiplesSum / multiplesCount : 0,
     fire_count: fireCount,
     urgent_count: urgentCount,
-    target: TARGET_NET_PROFIT,
+    target,
   };
+}
+
+export function sumCostBasis(tickets: { total_cost: number }[]): number {
+  return tickets.reduce((sum, t) => sum + (Number(t.total_cost) || 0), 0);
 }

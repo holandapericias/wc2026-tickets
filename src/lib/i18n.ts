@@ -6,7 +6,11 @@ export const translations = {
     dashboard: "Dashboard",
     market: "Market",
     scraper: "Scraper",
+    roberto: "Roberto",
     appName: "WC2026 Ticket Intelligence",
+    robertoTickets: "Roberto's Tickets",
+    awaitingCostData: "Cost data pending — margin and net P/L will populate once purchase prices are entered.",
+    seedRobertoTickets: "Load Roberto's Tickets",
 
     // Login
     loginTitle: "WC2026 Ticket Intelligence",
@@ -130,7 +134,11 @@ export const translations = {
     dashboard: "Painel",
     market: "Mercado",
     scraper: "Raspador",
+    roberto: "Roberto",
     appName: "WC2026 Inteligência de Ingressos",
+    robertoTickets: "Ingressos do Roberto",
+    awaitingCostData: "Custos pendentes — margem e L/P líquido aparecerão assim que os valores de compra forem inseridos.",
+    seedRobertoTickets: "Carregar Ingressos do Roberto",
 
     // Login
     loginTitle: "WC2026 Inteligência de Ingressos",

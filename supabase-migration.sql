@@ -2,6 +2,7 @@
 
 CREATE TABLE IF NOT EXISTS tickets (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  owner TEXT NOT NULL DEFAULT 'stephen',
   game_num INTEGER NOT NULL,
   match_name TEXT NOT NULL,
   match_date DATE NOT NULL,
@@ -16,6 +17,10 @@ CREATE TABLE IF NOT EXISTS tickets (
   total_cost NUMERIC(10,2) NOT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Idempotent migration for existing databases
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS owner TEXT NOT NULL DEFAULT 'stephen';
+CREATE INDEX IF NOT EXISTS idx_tickets_owner ON tickets(owner);
 
 CREATE TABLE IF NOT EXISTS price_scans (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,

@@ -1,5 +1,8 @@
+export type Owner = "stephen" | "roberto";
+
 export interface Ticket {
   id: string;
+  owner: Owner;
   game_num: number;
   match_name: string;
   match_date: string;

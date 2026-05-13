@@ -12,6 +12,7 @@ export default function Navbar() {
   const links = [
     { href: "/dashboard", label: t("dashboard") },
     { href: "/market", label: t("market") },
+    { href: "/roberto", label: t("roberto") },
     { href: "/scraper", label: t("scraper") },
   ];
 
