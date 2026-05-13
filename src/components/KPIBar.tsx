@@ -20,11 +20,18 @@ function KPICard({ label, value, sub, color }: { label: string; value: string; s
 export default function KPIBar({ summary }: { summary: PortfolioSummary }) {
   const { t } = useLanguage();
   const profitColor = summary.total_net_profit >= 0 ? "text-green-400" : "text-red-400";
-  const vsTargetPct = ((summary.total_net_profit / summary.target) * 100).toFixed(0);
+  const showTarget = summary.target > 0;
+  const vsTargetPct = showTarget
+    ? ((summary.total_net_profit / summary.target) * 100).toFixed(0)
+    : "0";
   const vsTargetColor = summary.total_net_profit >= summary.target ? "text-green-400" : "text-yellow-400";
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div
+      className={`grid grid-cols-2 md:grid-cols-3 gap-3 ${
+        showTarget ? "lg:grid-cols-6" : "lg:grid-cols-5"
+      }`}
+    >
       <KPICard
         label={t("portfolioValue")}
         value={fmt(summary.total_market_value)}
@@ -40,12 +47,14 @@ export default function KPIBar({ summary }: { summary: PortfolioSummary }) {
         value={fmt(summary.total_net_profit)}
         color={profitColor}
       />
-      <KPICard
-        label={t("vsTarget")}
-        value={`${vsTargetPct}%`}
-        sub={fmt(summary.vs_target) + " " + t("remaining")}
-        color={vsTargetColor}
-      />
+      {showTarget && (
+        <KPICard
+          label={t("vsTarget")}
+          value={`${vsTargetPct}%`}
+          sub={fmt(summary.vs_target) + " " + t("remaining")}
+          color={vsTargetColor}
+        />
+      )}
       <KPICard
         label={t("avgMultiple")}
         value={`${summary.avg_multiple.toFixed(1)}x`}
