@@ -12,7 +12,13 @@ function fmt(n: number | null) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 }
 
-export default function PortfolioTable({ tickets }: { tickets: TicketWithSignal[] }) {
+export default function PortfolioTable({
+  tickets,
+  linkPrefix = "/ticket",
+}: {
+  tickets: TicketWithSignal[];
+  linkPrefix?: string;
+}) {
   const { t } = useLanguage();
   const [selected, setSelected] = useState<Set<string>>(() => new Set(tickets.map((tk) => tk.id)));
 
@@ -104,12 +110,12 @@ export default function PortfolioTable({ tickets }: { tickets: TicketWithSignal[
                   />
                 </td>
                 <td className="px-3 py-2 text-dark-muted">
-                  <Link href={`/ticket/${tk.id}`} className="hover:text-fifa-red">
+                  <Link href={`${linkPrefix}/${tk.id}`} className="hover:text-fifa-red">
                     G{tk.game_num}
                   </Link>
                 </td>
                 <td className="px-3 py-2">
-                  <Link href={`/ticket/${tk.id}`} className="hover:text-fifa-red text-dark-text">
+                  <Link href={`${linkPrefix}/${tk.id}`} className="hover:text-fifa-red text-dark-text">
                     <div className="max-w-[200px] truncate">{tk.match_name}</div>
                     <div className="text-xs text-dark-muted">{tk.city}</div>
                   </Link>

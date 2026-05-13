@@ -9,6 +9,11 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Public shared-portfolio links (slug acts as the secret — validated in the page)
+  if (pathname.startsWith("/r/")) {
+    return NextResponse.next();
+  }
+
   if (PUBLIC_PATHS.some((p) => pathname === p)) {
     return NextResponse.next();
   }
