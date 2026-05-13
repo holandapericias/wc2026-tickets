@@ -22,10 +22,10 @@ export const TICKET_SEED_DATA = [
 // Roberto's 4 tickets. Costs/prices pending — set to 0 placeholders; UI treats
 // cost_per_ticket=0 as "awaiting cost data" and suppresses misleading margin numbers.
 export const ROBERTO_SEED_DATA = [
-  { owner: "roberto", game_num: 0, match_name: "Ivory Coast vs Ecuador", match_date: "2026-06-14", venue: "TBD", city: "TBD", category: 0, section: "114", row_num: "15", seats: "1,2,3,4", qty: 4, cost_per_ticket: 0, total_cost: 0 },
-  { owner: "roberto", game_num: 0, match_name: "Brazil vs Haiti", match_date: "2026-06-19", venue: "TBD", city: "TBD", category: 0, section: "112", row_num: "20", seats: "20,21,22,23", qty: 4, cost_per_ticket: 0, total_cost: 0 },
-  { owner: "roberto", game_num: 0, match_name: "Ivory Coast vs Curacao", match_date: "2026-06-25", venue: "TBD", city: "TBD", category: 0, section: "124", row_num: "14", seats: "1,2,3,4", qty: 4, cost_per_ticket: 0, total_cost: 0 },
-  { owner: "roberto", game_num: 0, match_name: "R16: Winner G74 vs Winner G77", match_date: "2026-07-04", venue: "TBD", city: "TBD", category: 0, section: "114", row_num: "22", seats: "12,13,14,15", qty: 4, cost_per_ticket: 0, total_cost: 0 },
+  { owner: "roberto", game_num: 9, match_name: "Ivory Coast vs Ecuador", match_date: "2026-06-14", venue: "Lincoln Financial Field", city: "Philadelphia", category: 1, section: "114", row_num: "15", seats: "1,2,3,4", qty: 4, cost_per_ticket: 0, total_cost: 0 },
+  { owner: "roberto", game_num: 29, match_name: "Brazil vs Haiti", match_date: "2026-06-19", venue: "Lincoln Financial Field", city: "Philadelphia", category: 1, section: "112", row_num: "20", seats: "20,21,22,23", qty: 4, cost_per_ticket: 0, total_cost: 0 },
+  { owner: "roberto", game_num: 55, match_name: "Ivory Coast vs Curacao", match_date: "2026-06-25", venue: "Lincoln Financial Field", city: "Philadelphia", category: 1, section: "124", row_num: "14", seats: "1,2,3,4", qty: 4, cost_per_ticket: 0, total_cost: 0 },
+  { owner: "roberto", game_num: 89, match_name: "R16: Winner G74 vs Winner G77", match_date: "2026-07-04", venue: "Lincoln Financial Field", city: "Philadelphia", category: 1, section: "114", row_num: "22", seats: "12,13,14,15", qty: 4, cost_per_ticket: 0, total_cost: 0 },
 ];
 
 export const TOTAL_COST_BASIS = 22480;
