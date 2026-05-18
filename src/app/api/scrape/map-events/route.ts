@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
     match_date: string;
     candidates: Array<{ id: string; name: string; venue: string | undefined; url: string | undefined }>;
     picked_id: string | null;
+    error?: string;
   }> = [];
 
   for (const ticket of Array.from(eventKeys.values())) {
@@ -59,6 +60,7 @@ export async function POST(req: NextRequest) {
         match_date: ticket.match_date,
         candidates: [],
         picked_id: null,
+        error: e instanceof Error ? e.message : String(e),
       });
       continue;
     }
