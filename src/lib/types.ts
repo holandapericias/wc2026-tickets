@@ -15,6 +15,7 @@ export interface Ticket {
   qty: number;
   cost_per_ticket: number;
   total_cost: number;
+  tm_event_id: string | null;
 }
 
 export interface PriceScan {

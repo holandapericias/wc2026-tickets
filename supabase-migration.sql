@@ -22,6 +22,10 @@ CREATE TABLE IF NOT EXISTS tickets (
 ALTER TABLE tickets ADD COLUMN IF NOT EXISTS owner TEXT NOT NULL DEFAULT 'stephen';
 CREATE INDEX IF NOT EXISTS idx_tickets_owner ON tickets(owner);
 
+-- Ticketmaster Discovery API event ID per ticket (nullable until mapped).
+ALTER TABLE tickets ADD COLUMN IF NOT EXISTS tm_event_id TEXT;
+CREATE INDEX IF NOT EXISTS idx_tickets_tm_event ON tickets(tm_event_id);
+
 CREATE TABLE IF NOT EXISTS price_scans (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   ticket_id UUID REFERENCES tickets(id) ON DELETE CASCADE,
