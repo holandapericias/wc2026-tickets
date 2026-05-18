@@ -38,20 +38,25 @@ function apiKey(): string {
   return key;
 }
 
-// List every event matching a keyword on a given date. We use this with
-// "World Cup" + the match date to get the full set of WC2026 matches on that
-// day — much more reliable than searching by team names like "Brazil vs
-// Haiti" (which TM may not index identically to how we have it stored).
+// List every event matching a keyword on a given date. The date is treated
+// as the local calendar date of the match; the UTC window is widened to
+// (localDate 00:00 UTC) through (localDate+1 12:00 UTC) so we catch evening
+// kickoffs that roll over to the next UTC day. Without this, Brazil vs
+// Haiti at 8:30pm EDT (12:30am UTC next day) was being missed entirely.
 export async function searchEvents(
   keyword: string,
-  startDate: string, // YYYY-MM-DD
+  localDate: string, // YYYY-MM-DD
 ): Promise<TMEvent[]> {
+  const next = new Date(`${localDate}T00:00:00Z`);
+  next.setUTCDate(next.getUTCDate() + 1);
+  const nextDate = next.toISOString().slice(0, 10);
+
   const params = new URLSearchParams({
     apikey: apiKey(),
     keyword,
-    startDateTime: `${startDate}T00:00:00Z`,
-    endDateTime: `${startDate}T23:59:59Z`,
-    size: "50",
+    startDateTime: `${localDate}T00:00:00Z`,
+    endDateTime: `${nextDate}T12:00:00Z`,
+    size: "100",
     locale: "*",
     classificationName: "Sports",
   });
