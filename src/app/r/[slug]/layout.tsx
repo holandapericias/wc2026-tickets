@@ -1,4 +1,5 @@
 import PublicNav from "./PublicNav";
+import SimulationBanner from "@/components/SimulationBanner";
 
 export default function PublicPortfolioLayout({
   children,
@@ -10,6 +11,7 @@ export default function PublicPortfolioLayout({
   return (
     <>
       <PublicNav slug={params.slug} />
+      <SimulationBanner />
       <main className="max-w-[1600px] mx-auto px-4 py-6">{children}</main>
     </>
   );

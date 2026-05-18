@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { REAL_DATA_CONNECTED } from "@/lib/feature-flags";
 
 interface ScanInfo {
   ticket_id: string;
@@ -138,12 +139,25 @@ export default function ScraperStatus({ owner }: Props) {
         <h1 className="text-xl font-bold">Scraper Status</h1>
         <button
           onClick={triggerScrape}
-          disabled={running}
-          className="px-4 py-2 bg-fifa-red text-white rounded-lg text-sm font-medium hover:bg-fifa-red-dark transition-colors disabled:opacity-50"
+          disabled={running || !REAL_DATA_CONNECTED}
+          title={
+            REAL_DATA_CONNECTED
+              ? undefined
+              : "Disabled — real FIFA data source not yet connected"
+          }
+          className="px-4 py-2 bg-fifa-red text-white rounded-lg text-sm font-medium hover:bg-fifa-red-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {running ? "Scraping..." : "Run Scrape Now"}
         </button>
       </div>
+
+      {!REAL_DATA_CONNECTED && (
+        <div className="border border-yellow-700/40 bg-yellow-900/20 text-yellow-100 rounded-lg p-3 text-sm">
+          Scraper is currently disabled. The previous simulator generated synthetic
+          prices, not real FIFA data. Re-enable will happen after the real FIFA
+          marketplace scraper (Playwright + Browserless) is wired up.
+        </div>
+      )}
 
       {result && (
         <div

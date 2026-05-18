@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
+import SimulationBanner from "@/components/SimulationBanner";
 import TicketDetailClient from "@/components/TicketDetailClient";
 import { getSupabase } from "@/lib/supabase";
 
@@ -20,6 +21,7 @@ export default async function TicketDetailPage({ params }: { params: { id: strin
   return (
     <>
       <Navbar />
+      <SimulationBanner />
       <main className="max-w-[1600px] mx-auto px-4 py-6">
         <TicketDetailClient
           ticket={ticket}

@@ -1,11 +1,22 @@
 import { getSupabase } from "./supabase";
 import { Ticket } from "./types";
+import { REAL_DATA_CONNECTED } from "./feature-flags";
 
 export async function scrapeAllTickets(): Promise<{
   success: boolean;
   scanned: number;
   errors: string[];
 }> {
+  if (!REAL_DATA_CONNECTED) {
+    return {
+      success: false,
+      scanned: 0,
+      errors: [
+        "Scraper disabled: real FIFA data source not yet connected. No fake scans will be inserted.",
+      ],
+    };
+  }
+
   const supabase = getSupabase();
   const { data: tickets, error } = await supabase
     .from("tickets")
