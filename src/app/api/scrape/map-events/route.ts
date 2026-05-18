@@ -7,11 +7,8 @@ export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
 // Admin endpoint: for every ticket without a tm_event_id, search Ticketmaster
-// by match_name + date, return candidate event matches. Use ?apply=true to
-// persist the best (first) match automatically.
-//
-// Output is a list of suggested mappings so the operator can sanity-check
-// before persisting if they don't trust the auto-match.
+// for WC2026 matches on the ticket's date, pick the one whose venue/match
+// matches best, return suggestions. Use ?apply=true to persist.
 export async function POST(req: NextRequest) {
   const apply = req.nextUrl.searchParams.get("apply") === "true";
 
@@ -38,21 +35,46 @@ export async function POST(req: NextRequest) {
   const suggestions: Array<{
     match_name: string;
     match_date: string;
-    candidates: Array<{ id: string; name: string; venue: string | undefined; url: string | undefined }>;
+    candidates: Array<{ id: string; name: string; venue: string | undefined; url: string | undefined; score: number }>;
     picked_id: string | null;
     error?: string;
   }> = [];
 
+  // Cache by date — many tickets share dates, so we hit TM once per date.
+  const eventsByDate = new Map<string, TMEvent[]>();
+
   for (const ticket of Array.from(eventKeys.values())) {
-    let candidates: TMEvent[] = [];
     try {
-      // Try a few keyword variants — TM's full-text search is fuzzy but match
-      // names like "R16: Winner G74 vs Winner G77" rarely return useful hits.
-      // Falls back to "World Cup <city>" + the date filter.
-      const queries = buildQueryVariants(ticket);
-      for (const q of queries) {
-        candidates = await searchEvents(q, ticket.match_date);
-        if (candidates.length > 0) break;
+      let dateEvents = eventsByDate.get(ticket.match_date);
+      if (!dateEvents) {
+        dateEvents = await searchEvents("World Cup", ticket.match_date);
+        eventsByDate.set(ticket.match_date, dateEvents);
+      }
+
+      const scored = dateEvents
+        .map((e) => ({ event: e, score: scoreCandidate(e, ticket) }))
+        .filter((s) => s.score > 0)
+        .sort((a, b) => b.score - a.score);
+
+      suggestions.push({
+        match_name: ticket.match_name,
+        match_date: ticket.match_date,
+        candidates: scored.slice(0, 5).map(({ event, score }) => ({
+          id: event.id,
+          name: event.name,
+          venue: event._embedded?.venues?.[0]?.name,
+          url: event.url,
+          score,
+        })),
+        picked_id: scored[0]?.event.id ?? null,
+      });
+
+      if (apply && scored[0]) {
+        await supabase
+          .from("tickets")
+          .update({ tm_event_id: scored[0].event.id })
+          .eq("match_name", ticket.match_name)
+          .eq("match_date", ticket.match_date);
       }
     } catch (e) {
       suggestions.push({
@@ -62,64 +84,65 @@ export async function POST(req: NextRequest) {
         picked_id: null,
         error: e instanceof Error ? e.message : String(e),
       });
-      continue;
-    }
-
-    const picked = pickBest(candidates, ticket);
-
-    suggestions.push({
-      match_name: ticket.match_name,
-      match_date: ticket.match_date,
-      candidates: candidates.slice(0, 5).map((c) => ({
-        id: c.id,
-        name: c.name,
-        venue: c._embedded?.venues?.[0]?.name,
-        url: c.url,
-      })),
-      picked_id: picked?.id ?? null,
-    });
-
-    if (apply && picked) {
-      await supabase
-        .from("tickets")
-        .update({ tm_event_id: picked.id })
-        .eq("match_name", ticket.match_name)
-        .eq("match_date", ticket.match_date);
     }
   }
 
   return NextResponse.json({
     applied: apply,
     mapped: apply ? suggestions.filter((s) => s.picked_id).length : 0,
+    total_unmapped: suggestions.length,
     suggestions,
   });
 }
 
-function buildQueryVariants(ticket: Ticket): string[] {
-  const variants: string[] = [];
-  const name = ticket.match_name;
-  variants.push(name);
-  // Knockout placeholders are unhelpful as search terms — use city + "world cup".
-  if (/^(R32|R16|QF|SF|F):/i.test(name) || /winner|2nd place|1st place|best 3rd/i.test(name)) {
-    if (ticket.city && ticket.city !== "TBD") {
-      variants.push(`World Cup ${ticket.city}`);
-    }
-    variants.push("FIFA World Cup");
-  }
-  return variants;
-}
+// Higher = better match. Combines venue match, name overlap, and a baseline
+// for "looks like a WC match" so we don't pick unrelated TM events.
+function scoreCandidate(event: TMEvent, ticket: Ticket): number {
+  const eventName = event.name.toLowerCase();
+  const eventVenue = (event._embedded?.venues?.[0]?.name ?? "").toLowerCase();
+  let score = 0;
 
-function pickBest(candidates: TMEvent[], ticket: Ticket): TMEvent | null {
-  if (candidates.length === 0) return null;
-  // Prefer events whose venue matches the ticket's venue (when we know it).
+  // Must look like a WC2026 event — TM names them "World Cup: Match N ..." or
+  // "World Cup Round of N: ...". Reject random fan-event lookalikes early.
+  if (eventName.includes("world cup")) score += 10;
+  else return 0;
+
+  // Venue exact match is the strongest signal.
   if (ticket.venue && ticket.venue !== "TBD") {
-    const venueMatch = candidates.find((c) =>
-      c._embedded?.venues?.some((v) =>
-        v.name?.toLowerCase().includes(ticket.venue.toLowerCase()),
-      ),
-    );
-    if (venueMatch) return venueMatch;
+    const v = ticket.venue.toLowerCase();
+    if (eventVenue && (eventVenue.includes(v) || v.includes(eventVenue))) {
+      score += 50;
+    }
   }
-  // Otherwise the first result (TM ranks by relevance).
-  return candidates[0];
+
+  // Match number from the ticket name (e.g. "Match 9", "Match 89") vs TM name.
+  const ourMatchNumMatch = /match\s+(\d+)/i.exec(ticket.match_name);
+  const tmMatchNumMatch = /match\s+(\d+)/i.exec(event.name);
+  if (ourMatchNumMatch && tmMatchNumMatch && ourMatchNumMatch[1] === tmMatchNumMatch[1]) {
+    score += 30;
+  }
+
+  // Game number from our DB (if populated) vs TM match N.
+  if (ticket.game_num > 0 && tmMatchNumMatch && parseInt(tmMatchNumMatch[1], 10) === ticket.game_num) {
+    score += 40;
+  }
+
+  // Team name overlap (for group stage tickets that have real team names).
+  const teams = ticket.match_name
+    .toLowerCase()
+    .replace(/^(r32|r16|qf|sf|f):\s*/i, "")
+    .split(/\s+vs\.?\s+/);
+  for (const team of teams) {
+    if (team.length > 3 && eventName.includes(team)) {
+      score += 10;
+    }
+  }
+
+  // Knockout-round signal: tickets named "R16/R32/QF" should pair with TM
+  // "Round of 16/32" or "Quarter-Finals" labels.
+  if (/^r32:/i.test(ticket.match_name) && eventName.includes("round of 32")) score += 20;
+  if (/^r16:/i.test(ticket.match_name) && eventName.includes("round of 16")) score += 20;
+  if (/^qf:/i.test(ticket.match_name) && (eventName.includes("quarter") || eventName.includes("qf"))) score += 20;
+
+  return score;
 }

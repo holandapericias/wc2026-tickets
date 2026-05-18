@@ -38,8 +38,10 @@ function apiKey(): string {
   return key;
 }
 
-// Search events by keyword + start date. Used for one-time mapping of each
-// ticket to its TM event ID.
+// List every event matching a keyword on a given date. We use this with
+// "World Cup" + the match date to get the full set of WC2026 matches on that
+// day — much more reliable than searching by team names like "Brazil vs
+// Haiti" (which TM may not index identically to how we have it stored).
 export async function searchEvents(
   keyword: string,
   startDate: string, // YYYY-MM-DD
@@ -49,8 +51,9 @@ export async function searchEvents(
     keyword,
     startDateTime: `${startDate}T00:00:00Z`,
     endDateTime: `${startDate}T23:59:59Z`,
-    size: "20",
+    size: "50",
     locale: "*",
+    classificationName: "Sports",
   });
   const res = await fetch(`${BASE_URL}/events.json?${params}`, {
     cache: "no-store",
