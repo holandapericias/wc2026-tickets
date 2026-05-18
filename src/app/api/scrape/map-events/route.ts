@@ -40,21 +40,61 @@ export async function POST(req: NextRequest) {
     error?: string;
   }> = [];
 
-  // Cache by date — many tickets share dates, so we hit TM once per date.
-  const eventsByDate = new Map<string, TMEvent[]>();
+  // Cache results by their search key so we don't repeat lookups.
+  const searchCache = new Map<string, TMEvent[]>();
+
+  // Minimum confidence to auto-pick. Below this we leave picked_id null so
+  // the operator can verify before applying.
+  const MIN_PICK_SCORE = 40;
+
+  async function fetchWithRetry(keyword: string, date: string): Promise<TMEvent[]> {
+    const cacheKey = `${keyword}|${date}`;
+    const cached = searchCache.get(cacheKey);
+    if (cached) return cached;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const events = await searchEvents(keyword, date);
+        searchCache.set(cacheKey, events);
+        return events;
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (msg.includes("429") && attempt < 2) {
+          await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+          continue;
+        }
+        throw err;
+      }
+    }
+    return [];
+  }
 
   for (const ticket of Array.from(eventKeys.values())) {
     try {
-      let dateEvents = eventsByDate.get(ticket.match_date);
-      if (!dateEvents) {
-        dateEvents = await searchEvents("World Cup", ticket.match_date);
-        eventsByDate.set(ticket.match_date, dateEvents);
+      // Game number search first (most precise — TM event names contain
+      // "Match N" verbatim), then fall back to a generic "World Cup" sweep.
+      const buckets: TMEvent[] = [];
+      if (ticket.game_num > 0) {
+        const byNumber = await fetchWithRetry(`Match ${ticket.game_num}`, ticket.match_date);
+        buckets.push(...byNumber);
       }
+      const byWC = await fetchWithRetry("World Cup", ticket.match_date);
+      buckets.push(...byWC);
 
-      const scored = dateEvents
+      // Dedupe by id, preserving the earlier (more specific) entries.
+      const seen = new Set<string>();
+      const unique = buckets.filter((e) => {
+        if (seen.has(e.id)) return false;
+        seen.add(e.id);
+        return true;
+      });
+
+      const scored = unique
         .map((e) => ({ event: e, score: scoreCandidate(e, ticket) }))
         .filter((s) => s.score > 0)
         .sort((a, b) => b.score - a.score);
+
+      const top = scored[0];
+      const pickedId = top && top.score >= MIN_PICK_SCORE ? top.event.id : null;
 
       suggestions.push({
         match_name: ticket.match_name,
@@ -66,13 +106,13 @@ export async function POST(req: NextRequest) {
           url: event.url,
           score,
         })),
-        picked_id: scored[0]?.event.id ?? null,
+        picked_id: pickedId,
       });
 
-      if (apply && scored[0]) {
+      if (apply && pickedId) {
         await supabase
           .from("tickets")
-          .update({ tm_event_id: scored[0].event.id })
+          .update({ tm_event_id: pickedId })
           .eq("match_name", ticket.match_name)
           .eq("match_date", ticket.match_date);
       }
