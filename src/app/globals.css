@@ -3,75 +3,25 @@
 @tailwind utilities;
 
 :root {
-  --background: #0B0E14;
-  --foreground: #E2E8F0;
-  --card: #12151E;
-  --border: #1E2330;
-  --surface: #181C28;
-  --muted: #8B95A5;
-  --fifa-red: #C8102E;
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
+  font-family: Arial, Helvetica, sans-serif;
 }
 
-.light {
-  --background: #F8F9FA;
-  --foreground: #1A1A2E;
-  --card: #FFFFFF;
-  --border: #E2E8F0;
-  --surface: #F1F5F9;
-  --muted: #64748B;
-}
-
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: var(--background);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--muted);
-}
-
-/* Bloomberg-style table */
-.portfolio-table {
-  font-variant-numeric: tabular-nums;
-}
-
-.portfolio-table th {
-  @apply text-xs font-medium uppercase tracking-wider text-dark-muted;
-}
-
-.portfolio-table td {
-  @apply text-sm font-mono;
-}
-
-/* Pulsing fire animation */
-@keyframes fire-pulse {
-  0%, 100% { box-shadow: 0 0 5px rgba(200, 16, 46, 0.4); }
-  50% { box-shadow: 0 0 20px rgba(200, 16, 46, 0.8); }
-}
-
-.fire-glow {
-  animation: fire-pulse 1.5s ease-in-out infinite;
-}
-
-/* KPI cards */
-.kpi-card {
-  @apply rounded-lg p-4 border transition-all duration-200;
-  background: var(--card);
-  border-color: var(--border);
-}
-
-.kpi-card:hover {
-  border-color: var(--fifa-red);
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
 }

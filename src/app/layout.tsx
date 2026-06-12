@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import { LanguageProvider } from "@/components/LanguageProvider";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -15,8 +14,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "WC2026 Ticket Intelligence",
-  description: "Live market monitoring dashboard for World Cup 2026 ticket portfolio",
+  title: "Meu Chaveamento — Copa 2026",
+  description: "Descobre quem joga em cada um dos meus jogos da Copa 2026 assim que matematicamente confirmado.",
 };
 
 export default function RootLayout({
@@ -25,13 +24,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="pt-BR">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-dark-bg text-dark-text min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <LanguageProvider>
-          {children}
-        </LanguageProvider>
+        {children}
       </body>
     </html>
   );
